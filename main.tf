@@ -43,18 +43,24 @@ resource "aws_security_group_rule" "ingress_rules" {
   security_group_id = aws_security_group.tf_security_group.id
 }
 
+resource "random_integer" "availability_zone" {
+  min = 0
+  max = length(var.public_subnets)
+}
+
 resource "aws_subnet" "tf_subnet" {
-  map_public_ip_on_launch = true
   vpc_id                  = aws_vpc.tf_vpc.id
-  cidr_block              = "172.31.32.0/20"
+  cidr_block              = var.public_subnets[random_integer.availability_zone.result].cidr_block
+  availability_zone       = var.public_subnets[random_integer.availability_zone.result].availability_zone
+  map_public_ip_on_launch = true
 
   tags = {
-    Name = "tf-subnet"
+    Name = "${var.public_subnets[random_integer.availability_zone.result].availability_zone}-public-subnet"
   }
 }
 
 resource "aws_network_interface" "tf_net_int" {
-  subnet_id       = aws_subnet.tf_subnet.id
+  subnet_id       = element(aws_subnet.tf_subnet.*.id, random_integer.availability_zone.result)
   security_groups = [aws_security_group.tf_security_group.id]
 
   tags = {
@@ -80,7 +86,7 @@ resource "aws_instance" "tf_instance" {
   key_name      = "atlassian_keycloak"
 
   network_interface {
-    network_interface_id = aws_network_interface.tf_net_int.id
+    network_interface_id = element(aws_network_interface.tf_net_int.*.id, random_integer.availability_zone.result)
     device_index         = 0
   }
 

@@ -25,19 +25,33 @@ variable "sg_ingress_rules" {
       to_port     = 443
       protocol    = "tcp"
       cidr_block  = "0.0.0.0/0"
-      description = "ssh"
-    },
-    {
-      from_port   = 8080
-      to_port     = 8080
-      protocol    = "tcp"
-      cidr_block  = "0.0.0.0/0"
-      description = "ssh"
-    },
+      description = "https"
+    }
   ]
 }
 
 variable "security_groups_name" {
   type    = string
   default = "tf-security_group"
+}
+
+variable "public_subnets" {
+  type = list(object({
+    cidr_block        = string
+    availability_zone = string
+  }))
+  default = [
+    {
+      cidr_block        = "172.31.16.0/20"
+      availability_zone = "eu-central-1a"
+    },
+    {
+      cidr_block        = "172.31.32.0/20"
+      availability_zone = "eu-central-1b"
+    },
+    {
+      cidr_block        = "172.31.0.0/20"
+      availability_zone = "eu-central-1c"
+    }
+  ]
 }
